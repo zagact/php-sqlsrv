@@ -19,17 +19,9 @@ class UserModel {
     }
 
     public function createUser($name, $email, $password) {
-        try {
-            $sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
-            $params = array($name, $email, $password);
-            return sqlsrv_query($this->conn, $sql, $params);
-        } catch (Exception $e) {
-            return "e";
-            // die(print_r($e->getMessage()));
-        }
-        // $sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
-        // $params = array($name, $email, $password);
-        // return sqlsrv_query($this->conn, $sql, $params);
+        $sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
+        $params = array($name, $email, $password);
+        return sqlsrv_query($this->conn, $sql, $params);
     }
 }
 ?>
