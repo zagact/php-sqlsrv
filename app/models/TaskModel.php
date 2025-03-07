@@ -1,49 +1,83 @@
 <?php
 class TaskModel {
-    private $conn;
+    private $pdo;
 
-    public function __construct($conn) {
-        $this->conn = $conn;
+    public function __construct($pdo) {
+        $this->pdo = $pdo; // Recibe una instancia de PDO
     }
 
+    /**
+     * Obtiene todas las tareas de la base de datos.
+     *
+     * @return array Un array de tareas.
+     */
     public function getAllTasks() {
         $sql = "SELECT * FROM tasks";
-        $stmt = sqlsrv_query($this->conn, $sql);
-        $tasks = [];
+        $stmt = $this->pdo->query($sql);
 
-        // if (count($tasks) == 0) {
-        //     # code...
-        //     return $tasks;
-        // }
-        while ($row = sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC)) {
-            $tasks[] = $row;
-        }
-        return $tasks;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Devuelve un array asociativo
     }
 
+    /**
+     * Obtiene una tarea por su ID.
+     *
+     * @param int $id El ID de la tarea.
+     * @return array|null Los datos de la tarea o null si no se encuentra.
+     */
     public function getTaskById($id) {
-        $sql = "SELECT * FROM tasks WHERE id = ?";
-        $params = array($id);
-        $stmt = sqlsrv_query($this->conn, $sql, $params);
-        return sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
+        $sql = "SELECT * FROM tasks WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['id' => $id]);
+
+        return $stmt->fetch(PDO::FETCH_ASSOC); // Devuelve un array asociativo
     }
 
+    /**
+     * Crea una nueva tarea en la base de datos.
+     *
+     * @param array $data Un array con los datos de la tarea (title, description).
+     * @return bool True si la tarea fue creada, false en caso contrario.
+     */
     public function createTask($data) {
-        $sql = "INSERT INTO tasks (title, description, finish) VALUES (?, ?, ?)";
-        $params = array($data['title'], $data['description'], false);
-        return sqlsrv_query($this->conn, $sql, $params);
+        $sql = "INSERT INTO tasks (title, description, finish) VALUES (:title, :description, :finish)";
+        $stmt = $this->pdo->prepare($sql);
+
+        return $stmt->execute([
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'finish' => false // Valor por defecto para 'finish'
+        ]);
     }
 
+    /**
+     * Actualiza una tarea existente en la base de datos.
+     *
+     * @param int $id El ID de la tarea.
+     * @param array $data Un array con los nuevos datos de la tarea (title, description).
+     * @return bool True si la tarea fue actualizada, false en caso contrario.
+     */
     public function updateTask($id, $data) {
-        $sql = "UPDATE tasks SET title = ?, description = ? WHERE id = ?";
-        $params = array($data['title'], $data['description'], $id);
-        return sqlsrv_query($this->conn, $sql, $params);
+        $sql = "UPDATE tasks SET title = :title, description = :description WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+
+        return $stmt->execute([
+            'title' => $data['title'],
+            'description' => $data['description'],
+            'id' => $id
+        ]);
     }
 
+    /**
+     * Elimina una tarea de la base de datos.
+     *
+     * @param int $id El ID de la tarea.
+     * @return bool True si la tarea fue eliminada, false en caso contrario.
+     */
     public function deleteTask($id) {
-        $sql = "DELETE FROM tasks WHERE id = ?";
-        $params = array($id);
-        return sqlsrv_query($this->conn, $sql, $params);
+        $sql = "DELETE FROM tasks WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+
+        return $stmt->execute(['id' => $id]);
     }
 }
 ?>

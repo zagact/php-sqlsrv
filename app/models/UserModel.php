@@ -1,27 +1,42 @@
 <?php
 class UserModel {
-    private $conn;
+    private $pdo;
 
-    public function __construct($conn) {
-        $this->conn = $conn;
+    public function __construct($pdo) {
+        $this->pdo = $pdo; // Recibe una instancia de PDO
     }
 
+    /**
+     * Obtiene un usuario por su correo electrónico.
+     *
+     * @param string $email El correo electrónico del usuario.
+     * @return array|null Los datos del usuario o null si no se encuentra.
+     */
     public function getUserByEmail($email) {
-        $sql = "SELECT * FROM users WHERE email = ?";
-        $params = array($email);
-        $stmt = sqlsrv_query($this->conn, $sql, $params);
+        $sql = "SELECT * FROM users WHERE email = :email";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute(['email' => $email]);
 
-        if ($stmt === false) {
-            die(print_r(sqlsrv_errors(), true));
-        }
-
-        return sqlsrv_fetch_array($stmt, SQLSRV_FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC); // Devuelve un array asociativo
     }
 
+    /**
+     * Crea un nuevo usuario en la base de datos.
+     *
+     * @param string $name El nombre del usuario.
+     * @param string $email El correo electrónico del usuario.
+     * @param string $password La contraseña hasheada del usuario.
+     * @return bool True si el usuario fue creado, false en caso contrario.
+     */
     public function createUser($name, $email, $password) {
-        $sql = "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
-        $params = array($name, $email, $password);
-        return sqlsrv_query($this->conn, $sql, $params);
+        $sql = "INSERT INTO users (name, email, password) VALUES (:name, :email, :password)";
+        $stmt = $this->pdo->prepare($sql);
+
+        return $stmt->execute([
+            'name' => $name,
+            'email' => $email,
+            'password' => $password
+        ]);
     }
 }
 ?>
